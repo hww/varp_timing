@@ -25,7 +25,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace VARP.Timing
+namespace Plugins.VARP.Timing
 {
     public class FTicker
     {

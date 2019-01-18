@@ -22,7 +22,7 @@
 // SOFTWARE.
 // =============================================================================
 
-namespace VARP.Timing
+namespace Plugins.VARP.Timing
 {
     /// <summary>
     /// Scaled Time
