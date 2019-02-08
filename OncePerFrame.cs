@@ -24,7 +24,7 @@
  
 using UnityEngine;
 
-namespace Plugins.VARP.Timing
+namespace VARP.Timing
 {
     /// <summary>
     /// The guard for calling function only once per frame

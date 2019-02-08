@@ -1,7 +1,7 @@
-﻿using Plugins.VARP.Utilities;
+﻿using VARP.Utilities;
 using UnityEngine;
 
-namespace Plugins.VARP.Timing
+namespace VARP.Timing
 {
     /// <summary>
     /// Generic FPS counter agnostic to the visualization 
