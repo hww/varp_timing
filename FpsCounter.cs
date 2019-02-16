@@ -22,8 +22,8 @@
 // SOFTWARE.
 // =============================================================================
 
-using VARP.Utilities;
 using UnityEngine;
+using VARP.DebugMenus;
 
 namespace VARP.Timing
 {
@@ -32,38 +32,96 @@ namespace VARP.Timing
     /// </summary>
     public static class FpsCounter
     {
-        public static float Fps;
+        private const float UPDATE_FPS_HUD_EVERY = 0.5f;
         
-        private static float TotalTime;
-        private static int FrameCount;
+        public static bool ShowFpsHud;
+        public static bool ShowFpsMinMax;
+        public static float Fps;
+        public static int MinFps;
+        public static int MaxFps;
+        public static int NumFixedUpdates;
+
+        private static int numFixedUpdates;
+        
+        private static float TotalDeltaTime;
+        private static float MinDeltaTime;
+        private static float MaxDeltaTime;
+        private static int TotalFrames;
         private static float Timer;
         private static int LastFps = -1;
-        private static string LastFpsString;
-        private const float TimerInterval = 0.5f;
-        
-        public static void AddFrameTime(float deltaTime)
+
+
+        private static FpsRepresentation representation;
+        private static FpsCounterData fpsCounterData;
+
+        public static void Initialize(FpsCounterData data)
         {
-            TotalTime += deltaTime;
-            FrameCount++;
-            Timer += deltaTime;
-            if (Timer > TimerInterval)
+            fpsCounterData = data;
+            representation = GameObject.FindObjectOfType<FpsRepresentation>();
+            ShowFpsHud = fpsCounterData.showFpsHud;
+            ShowFpsMinMax = fpsCounterData.showFpsMinMax;
+            Reset();
+        }
+        
+        public static void OnUpdate(float unscaledDeltaTime)
+        {
+            TotalFrames++;
+            TotalDeltaTime += unscaledDeltaTime;
+            if (unscaledDeltaTime > MaxDeltaTime) 
+                MaxDeltaTime = unscaledDeltaTime;
+            if (unscaledDeltaTime < MinDeltaTime) 
+                MinDeltaTime = unscaledDeltaTime;
+
+            Timer += unscaledDeltaTime;
+            NumFixedUpdates = numFixedUpdates;
+            
+            if (Timer >= UPDATE_FPS_HUD_EVERY)
             {
-                Fps = TotalTime / FrameCount;
-                TotalTime = 0;
-                FrameCount = 0;  
+                Timer -= UPDATE_FPS_HUD_EVERY;
+                
+                var aveFps_ = Mathf.RoundToInt(1f / (TotalDeltaTime / TotalFrames));
+                var minFps_ = Mathf.RoundToInt(1f / MaxDeltaTime);
+                var maxFps_ = Mathf.RoundToInt(1f / MinDeltaTime) ; 
+                if (Fps != aveFps_ || MaxFps != maxFps_ || MinFps != minFps_)
+                {
+                    Fps = aveFps_;
+                    MinFps = minFps_;
+                    MaxFps = maxFps_;
+                    representation.OnUpdate(unscaledDeltaTime);
+                }
+     
+                Reset();
             }
+
+            numFixedUpdates = 0;
+        }
+        
+        public static void OnFixedUpdate()
+        {
+            numFixedUpdates++;
         }
 
-        public static string GetFpsString()
+        private static void Reset()
         {
-            var fps = Mathf.RoundToInt(Fps);
-            if (LastFps != fps)
-            {
-                LastFps = fps;
-                LastFpsString = FastNumberToString.IntegerToString(fps);
-            }
-            return LastFpsString;
+            TotalFrames = 0;
+            TotalDeltaTime = 0;
+            MaxDeltaTime = 0;
+            MinDeltaTime = float.MaxValue;
+        }
+
+        public static void CreateMenu(int order)
+        {
+            var menu = new DebugMenu("Profiling", order);
+            new DebugMenuToggle(menu, "Show FPS", () => ShowFpsHud, val => ShowFpsHud = val);
+            new DebugMenuToggle(menu, "Show Min/Max FPS", () => ShowFpsMinMax, val => ShowFpsMinMax = val);
         }
         
+    }
+
+    [System.Serializable]
+    public class FpsCounterData
+    {
+        public bool showFpsHud;
+        public bool showFpsMinMax;
     }
 }
